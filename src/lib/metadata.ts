@@ -51,7 +51,7 @@ export async function fetchMetadata(u: string, timeoutMs = 2500): Promise<Meta> 
         const title = ogTitle || titleTag || undefined;
         const ogImageUrl = absoluteUrl(u, ogImage);
 
-        return { title, description, ogImage };
+        return { title, description, ogImage: ogImageUrl };
     } catch {
         return {};
     }
