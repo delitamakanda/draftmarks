@@ -10,7 +10,7 @@ export type Bookmark = {
     faviconUrl?: string;
     tags: string[];
     source: { gmailDraftId: string; gmailMessageId?: string; createdAt?: string; };
-    status: 'fresh | stale | archived';
+    status: 'fresh' | 'stale' | 'archived';
     addedAt: string;
     lastSeenAt: string;
     userId?: string;
