@@ -7,6 +7,7 @@ export const GET: APIRoute = async ({ request }) => {
     const sessionId = crypto.randomUUID()
     await db.setSession(sessionId, 'me')
     const headers = new Headers({ Location: url });
-    setSessionCookie(headers, sessionId)
+    const isSecure = new URL(url).protocol === 'https:' || process.env.NODE_ENV === 'production';
+    setSessionCookie(headers, sessionId, isSecure)
     return new Response(null, { status: 302, headers });
 }

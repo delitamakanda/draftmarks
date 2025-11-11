@@ -10,9 +10,15 @@ function baseUrl(request: Request): URL | string {
      return `${url.protocol}//${url.host}`;
 }
 
+const CALLBACK_API_URL = "/api/auth/callback";
+
+ function buildRedirectUrl(request: Request): string {
+     return new URL(CALLBACK_API_URL, baseUrl(request)).toString();
+ }
+
 export function authUrl(request: Request): any {
      const clientId = import.meta.env.GOOGLE_CLIENT_ID;
-     const redirectUri = new URL('/api/auth/callback', baseUrl(request)).toString();
+     const redirectUri = buildRedirectUrl(request);
      const state = crypto.randomUUID()
     const url = new URL(GOOGLE_OAUTH_AUTH_URL);
      url.searchParams.set('client_id', clientId);
@@ -23,14 +29,13 @@ export function authUrl(request: Request): any {
      url.searchParams.set('prompt', 'consent');
      url.searchParams.set('access_type', 'offline');
      url.searchParams.set('include_granted_scopes', 'true');
-
      return { url: url.toString(), state};
 }
 
 export async function  exchangeCodeForTokens(request: Request, code: string): Promise<any> {
      const clientId = import.meta.env.GOOGLE_CLIENT_ID;
      const clientSecret = import.meta.env.GOOGLE_CLIENT_SECRET;
-     const redirectUri = new URL('/api/auth/callback', baseUrl(request)).toString();
+     const redirectUri = buildRedirectUrl(request);
 
      const body = new URLSearchParams({
          code,
@@ -71,6 +76,15 @@ export function getSessionCookie(headers: Headers): string | null {
      return match?.[1] || null;
 }
 
-export function setSessionCookie(responseHeaders: Headers, sessionId: string): void {
-     responseHeaders.append('Set-Cookie', `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Secure`);
+export function setSessionCookie(responseHeaders: Headers, sessionId: string, isSecure = false): void {
+     const flags = [
+         `sessionId=${sessionId}`,
+         'Path=/',
+         'HttpOnly',
+         'SameSite=Lax',
+     ]
+    if (isSecure) {
+        flags.push('Secure');
+    }
+     responseHeaders.append('Set-Cookie', flags.join('; '));
 }

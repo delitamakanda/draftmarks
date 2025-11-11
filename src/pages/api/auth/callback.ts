@@ -2,9 +2,18 @@ import type { APIRoute } from "astro";
 import { getSessionCookie, exchangeCodeForTokens } from "../../../lib/oauth";
 import { db } from "../../../lib/db";
 
+function json(data: unknown, status = 200) {
+    return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
+}
+
 export const GET: APIRoute = async ({ request }) => {
     const url = new URL(request.url);
     const code = url.searchParams.get('code');
+
+    const err = url.searchParams.get('error');
+    if (err) {
+        return json({ error: err }, 400);
+    }
     if (!code) {
         return new Response('No code provided', { status: 400 });
     }
@@ -17,7 +26,11 @@ export const GET: APIRoute = async ({ request }) => {
         userId: 'me',
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
-        expiry_date: Date.now() + (tokens.expires_in-60) * 1000,
+        expiresAt: Date.now() + Math.max(0, (tokens.expires_in - 60)) * 1000,
     })
-    return new Response(null, { status: 200, headers: { Location: '/'} });
+    const headers = new Headers({
+        Location: '/api/auth/callback',
+        'Set-Cookie': `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax;`,
+    });
+    return new Response(null, { status: 302, headers });
 }
