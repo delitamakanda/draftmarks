@@ -1,0 +1,17 @@
+---
+const { url, title, description, faviconUrl, ogImageUrl, tags, domain } = Astro.props;
+---
+
+<article class="bg-white rounded-2xl shadow p-3 flex flex-col hover:shadow-md transition">
+    <div class="flex items-center mb-2">
+        <img src={faviconUrl || `https://www.google.com/s2/favicons?domain=${domain}`} alt="favicon" class="w-5 h-5 mr-2" />
+        <span class="text-sm text-gray-500">{domain}</span>
+    </div>
+    {ogImageUrl && <img src={ogImageUrl} alt={title} class="rounded-lg mb-2 object-cover h-32 w-full" />}
+    <h2 class="font-semibold text-lg mb-1 truncate">{title || url}</h2>
+    {description && <p class="text-sm text-gray-600 mb-2 line-clamp-2">{description}</p>}
+    <div class="flex flex-wrap gap-1 mb-2">
+        {tags?.map(t => <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">#{t}</span>)}
+    </div>
+    <a href={url} target="_blank" class="text-blue-600 text-sm mt-auto">Ouvrir</a>
+</article>

@@ -3,9 +3,36 @@ import '../styles/global.css';
 // Component Imports
 import Button from '../components/Button.astro';
 import ReactCounter from '../components/ReactCounter';
+import BookmarkCard from '../components/BookmarkCard.astro';
+import SearchBar from '../components/SearchBar';
+import TagChips from '../components/TagChips';
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/basics/astro-components/
+const url = new URL(Astro.request.url);
+const q = url.searchParams.get('q') || '';
+const tag = url.searchParams.get('tag') || '';
+const domain = url.searchParams.get('domain') || '';
+const sort = url.searchParams.get('sort') || 'added_at';
+const order = url.searchParams.get('order') || 'desc';
+const page = Number(url.searchParams.get('page') || 1);
+const pageSize = Number(url.searchParams.get('pageSize') || 24);
+
+
+// Server-side initial data
+const apiUrl = new URL('/api/gmail/links', Astro.url.origin);
+apiUrl.searchParams.set('page', String(page));
+apiUrl.searchParams.set('pageSize', String(pageSize));
+if (q) apiUrl.searchParams.set('q', q);
+if (tag) apiUrl.searchParams.set('tag', tag);
+if (domain) apiUrl.searchParams.set('domain', domain);
+apiUrl.searchParams.set('sort', sort);
+apiUrl.searchParams.set('order', order);
+
+
+// const initial = await fetch(apiUrl).then(r=>r.json());
+//const allTags: string[] = Array.from(new Set(initial.items.flatMap((i:any)=>i.tags||[]))).sort();
+//const allDomains: string[] = Array.from(new Set(initial.items.map((i:any)=>i.domain))).sort();
 ---
 
 <html lang="en">
@@ -17,11 +44,23 @@ import ReactCounter from '../components/ReactCounter';
 		<title>Astro + TailwindCSS</title>
 	</head>
 
-	<body>
-                <div class="grid place-items-center gap-8 h-screen content-center">
-                        <Button>Tailwind Button in Astro!</Button>
-                        <ReactCounter client:load initialCount={5} />
-                        <a href="/markdown-page" class="p-4 underline">Markdown is also supported...</a>
-                </div>
-	</body>
+    <body class="bg-gray-50 min-h-screen">
+    <main class="max-w-6xl mx-auto p-4">
+        <header class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl font-bold">Mes Bookmarks Gmail</h1>
+            <a href="/api/auth/google" class="text-blue-600 underline">Connecter Google</a>
+        </header>
+
+
+        <div class="flex gap-4 mb-4">
+            <SearchBar />
+            <TagChips />
+        </div>
+
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+        </div>
+    </main>
+    </body>
 </html>
