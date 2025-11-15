@@ -2,6 +2,8 @@ import type { APIRoute } from 'astro';
 import {db} from '../../lib/db'
 import { fetchMetadata, faviconUrl } from "../../lib/metadata";
 
+export const prerender = false; // This route needs prerendering to fetch the metadata and favicon
+
 export const GET: APIRoute = async ({ params }) => {
     const id = params.id!;
     const bookmark = await db.getBookmarkById(id);

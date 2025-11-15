@@ -4,6 +4,8 @@ import { db } from "../../../lib/db"
 import {gmailListDrafts, gmailGetDraftDetail, extractBodyFromMessage, decodeBase64Url } from '../../../lib/gmail'
 import {extractUrlsAndTags, normalizeUrl, bookmarkIdFrom, domainOf} from '../../../lib/parser'
 
+export const prerender = false; // This route does not need prerendering
+
 async function ensureAccessToken(sessionId: string): Promise<string> {
     const token = await db.getToken(sessionId)
     if (!token) {
