@@ -1,0 +1,56 @@
+---
+const qs = new URL(Astro.request.url).search;
+export const prerender = false;
+---
+<html lang="en">
+<head>
+  <title>Sign in ...</title>
+</head>
+<body class="max-w-xl mx-auto p-6">
+<h1 class="text-3xl font-bold mb-4">Sign in</h1>
+<p id="status" class="text-sm text-gray-600 mb-4">Please wait...</p>
+<pre class="text-xs mt-4 p-2 rounded-xl bg-gray-50 border" style="display:none" id="dbg"></pre>
+
+<script type="module">
+    const output = document.getElementById('status');
+    const dbg = document.getElementById('dbg');
+
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const state = params.get('state');
+
+        if (!code) {
+            output.textContent = 'Missing code parameter';
+            dbg.style.display = 'block';
+            dbg.textContent = window.location.href;
+        } else {
+            // send code to your backend to exchange for access token
+            const response = await fetch('/api/oauth/complete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code, state })
+            });
+            if (!response.ok) {
+                const t = await response.text();
+                output.textContent = `Error: ${response.status}`;
+                dbg.style.display = 'block';
+                dbg.textContent = t;
+            } else {
+                // handle successful authentication
+                window.location.href = '/';
+            }
+
+        }
+
+    } catch (error) {
+        // Handle errors
+        output.textContent = 'An error occurred: ' + error.message;
+        dbg.style.display = 'block';
+        dbg.textContent = String(error);
+    }
+</script>
+</body>
+</html>
