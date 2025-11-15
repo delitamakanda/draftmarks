@@ -147,13 +147,14 @@ export const db = {
 
 // set token
      async setToken(sessionId: string, rec: any): Promise<void> {
+         const safeExpiresAt = Number.isFinite(rec.expiresAt) ? rec.expiresAt : Date.now() + 3600_000;
         const { error } = await supabase
             .from('oauth_tokens').upsert({
                 session_id: sessionId,
                 user_id: rec.userId,
                 access_token: rec.accessToken,
-                refresh_token: rec.refreshToken,
-                expires_at: rec.expiry_date,
+                refresh_token: rec.refreshToken ?? null,
+                expires_at: safeExpiresAt,
             });
         if (error) {
             throw new Error(`Failed to set token: ${error.message}`);
