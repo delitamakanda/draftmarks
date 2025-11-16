@@ -144,7 +144,7 @@ if (isAuthenticated) {
     { isAuthenticated && (
         <>
             <script type="module">
-                const initialPayload = `{JSON.stringify(initial)
+                const initialPayload = `${JSON.stringify(initial)
                     .replace(/\\/g, "\\\\")
                     .replace(/`/g, "\\`")
                     .replace(/</g, "\\u003c")}`;
