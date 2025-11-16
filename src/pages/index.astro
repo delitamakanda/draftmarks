@@ -142,9 +142,170 @@ if (isAuthenticated) {
     </main>
 
     { isAuthenticated && (
-        <script type="module">
-            {/* ton script de search / pagination / resync existant ici */}
+        <>
+            <script type="application/json" id="initial-data">{JSON.stringify(initial)}</script>
+            <script type="module">
+                const initialDataEl = document.getElementById('initial-data');
+                const initialData = initialDataEl?.textContent ? JSON.parse(initialDataEl.textContent) : { items: [], totalCount: 0, page: 1, pageSize: 24 };
+
+                const controls = document.getElementById('controls');
+                const grid = document.getElementById('grid');
+                const statCount = document.getElementById('stat-count');
+                const statPage = document.getElementById('stat-page');
+                const prevBtn = document.getElementById('prev');
+                const nextBtn = document.getElementById('next');
+                const resyncBtn = document.getElementById('resync');
+
+                if (!controls || !grid || !statCount || !statPage || !prevBtn || !nextBtn || !resyncBtn) {
+                    console.error('Missing UI elements for search/pagination/resync controls');
+                    return;
+                }
+
+                const formElements = controls.elements;
+                const getFieldValue = (name) => {
+                    const el = formElements.namedItem(name);
+                    if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement) {
+                        return el.value;
+                    }
+                    return '';
+                };
+
+                const state = {
+                    page: initialData.page ?? 1,
+                    pageSize: initialData.pageSize ?? 24,
+                    q: getFieldValue('q'),
+                    tag: getFieldValue('tag'),
+                    domain: getFieldValue('domain'),
+                    sort: getFieldValue('sort') || 'added_at',
+                    order: getFieldValue('order') || 'desc',
+                };
+
+                const buildCard = (item) => {
+                    const favicon = item.faviconUrl || `https://www.google.com/s2/favicons?domain=${item.domain}`;
+                    const tags = Array.isArray(item.tags) ? item.tags : [];
+
+                    return `
+                        <article class="bg-white rounded-2xl shadow p-3 flex flex-col hover:shadow-md transition">
+                            <div class="flex items-center mb-2">
+                                <img src="${favicon}" alt="favicon" class="w-5 h-5 mr-2" />
+                                <span class="text-sm text-gray-500">${item.domain || ''}</span>
+                            </div>
+                            ${item.ogImageUrl ? `<img src="${item.ogImageUrl}" alt="${item.title || ''}" class="rounded-lg mb-2 object-cover h-32 w-full" />` : ''}
+                            <h2 class="font-semibold text-lg mb-1 truncate">${item.title || item.url}</h2>
+                            ${item.description ? `<p class="text-sm text-gray-600 mb-2 line-clamp-2">${item.description}</p>` : ''}
+                            <div class="flex flex-wrap gap-1 mb-2">
+                                ${tags.map((t) => `<span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">#${t}</span>`).join('')}
+                            </div>
+                            <a href="${item.url}" target="_blank" class="text-blue-600 text-sm mt-auto">Ouvrir</a>
+                        </article>
+                    `;
+                };
+
+                const renderData = (data) => {
+                    const { items, totalCount, page, pageSize } = data;
+                    grid.innerHTML = items.length
+                        ? items.map(buildCard).join('')
+                        : '<p class="col-span-full text-center text-gray-500">No links found.</p>';
+
+                    statCount.textContent = String(totalCount ?? items.length);
+                    statPage.textContent = String(page);
+
+                    prevBtn.toggleAttribute('disabled', page <= 1);
+                    const maxShown = page * pageSize;
+                    const reachedEnd = totalCount ? maxShown >= totalCount : items.length < pageSize;
+                    nextBtn.toggleAttribute('disabled', reachedEnd);
+                };
+
+                renderData(initialData);
+
+                const updateUrl = () => {
+                    const params = new URLSearchParams();
+                    if (state.q) params.set('q', state.q);
+                    if (state.tag) params.set('tag', state.tag);
+                    if (state.domain) params.set('domain', state.domain);
+                    if (state.sort) params.set('sort', state.sort);
+                    if (state.order) params.set('order', state.order);
+                    if (state.page > 1) params.set('page', String(state.page));
+                    params.set('pageSize', String(state.pageSize));
+                    const query = params.toString();
+                    const nextUrl = query ? `?${query}` : window.location.pathname;
+                    window.history.replaceState({}, '', nextUrl);
+                };
+
+                const toggleLoading = (loading) => {
+                    controls.querySelectorAll('input, select, button').forEach((el) => {
+                        if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLButtonElement) {
+                            el.toggleAttribute('disabled', loading);
+                        }
+                    });
+                    resyncBtn.textContent = loading ? 'Syncing…' : 'Resync';
+                };
+
+                const fetchData = async () => {
+                    const url = new URL('/api/gmail/links', window.location.origin);
+                    url.searchParams.set('page', String(state.page));
+                    url.searchParams.set('pageSize', String(state.pageSize));
+                    if (state.q) url.searchParams.set('q', state.q);
+                    if (state.tag) url.searchParams.set('tag', state.tag);
+                    if (state.domain) url.searchParams.set('domain', state.domain);
+                    if (state.sort) url.searchParams.set('sort', state.sort);
+                    if (state.order) url.searchParams.set('order', state.order);
+
+                    toggleLoading(true);
+                    try {
+                        const response = await fetch(url.toString(), { credentials: 'same-origin' });
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch links');
+                        }
+                        const data = await response.json();
+                        renderData(data);
+                        updateUrl();
+                    } catch (err) {
+                        console.error(err);
+                        grid.innerHTML = '<p class="col-span-full text-center text-red-600">An error occurred while loading links.</p>';
+                    } finally {
+                        toggleLoading(false);
+                    }
+                };
+
+                controls.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    state.page = 1;
+                    state.q = getFieldValue('q').trim();
+                    state.tag = getFieldValue('tag');
+                    state.domain = getFieldValue('domain').trim();
+                    state.sort = getFieldValue('sort') || 'added_at';
+                    state.order = getFieldValue('order') || 'desc';
+                    fetchData();
+                });
+
+                ['change', 'input'].forEach((evt) => {
+                    controls.addEventListener(evt, (event) => {
+                        if (!(event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement)) return;
+                        if (['q', 'domain'].includes(event.target.name) && evt === 'input') {
+                            return;
+                        }
+                        controls.dispatchEvent(new Event('submit'));
+                    });
+                });
+
+                prevBtn.addEventListener('click', () => {
+                    if (state.page <= 1) return;
+                    state.page -= 1;
+                    fetchData();
+                });
+
+                nextBtn.addEventListener('click', () => {
+                    state.page += 1;
+                    fetchData();
+                });
+
+                resyncBtn.addEventListener('click', () => {
+                    state.page = 1;
+                    fetchData();
+                });
             </script>
+        </>
     )}
     </body>
 </html>
