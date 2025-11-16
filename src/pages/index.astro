@@ -58,7 +58,6 @@ if (isAuthenticated) {
     });
     if (response.ok) {
         initial = await response.json();
-        console.log('Fetched data:', initial);
         allTags = Array.from(new Set(initial.items.flatMap((i:any)=>i.tags||[]))).sort();
         allDomains = Array.from(new Set(initial.items.map((i:any)=>i.domain))).sort();
     }
