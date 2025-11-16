@@ -143,7 +143,7 @@ if (isAuthenticated) {
 
     { isAuthenticated && (
         <>
-            <script type="module" is:inline>
+            <script type="module" is:inline define:vars={{ initial }}>
                 const initialPayload = `${JSON.stringify(initial)
                     .replace(/\\/g, "\\\\")
                     .replace(/`/g, "\\`")
@@ -168,7 +168,6 @@ if (isAuthenticated) {
 
                 if (!controls || !grid || !statCount || !statPage || !prevBtn || !nextBtn || !resyncBtn) {
                     console.error('Missing UI elements for search/pagination/resync controls');
-                    return;
                 }
 
                 const formElements = controls.elements;
