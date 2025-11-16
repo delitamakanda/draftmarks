@@ -22,44 +22,38 @@ interface Settings {
     id: string;
     title: string;
     description: string;
-    keywords: string[];
     href: string;
 }
 
 const settings: Settings[] = [
     {
         id: "legal-page",
-        title: "Mentions légales",
-        description: "Mentions légales de notre site",
-        keywords: ["mentions légales", "politique de confidentialité", "cookies"],
+        title: "Legal Notice",
+        description: "Legal Notice of our site",
         href: "/mentions-legales"
     },
     {
         id: "privacy-policy-page",
-        title: "Politique de confidentialité",
-        description: "Politique de confidentialité de notre site",
-        keywords: ["politique de confidentialité", "cookies", "protection des données personnelles"],
+        title: "Privacy Policy",
+        description: "Privacy Policy of our site",
         href: "/politique-de-confidentialite"
     },
     {
         id: "terms-of-service-page",
-        title: "Conditions d'utilisation",
-        description: "Conditions d'utilisation de notre site",
-        keywords: ["conditions d'utilisation", "cookies", "droit d'accès et de rectification"],
+        title: "Terms of Service",
+        description: "Terms of Service of our site",
         href: "/conditions-d-utilisation"
     },
     {
         id: "contact-page",
-        title: "Contact",
-        description: "Contactez-nous pour toute question ou demande",
-        keywords: ["contact", "formulaire de contact", "répondre à un message"],
+        title: "Contact us",
+        description: "Contact us for any questions or concerns. Contact us via our email or social media platforms.",
         href: "/contact"
     },
     {
         id: "accounts-page",
-        title: "Paramètres",
-        description: "Paramètres de votre compte",
-        keywords: ["compte", "réinitialiser le mot de passe", "changer d'adresse email"],
+        title: "Settings",
+        description: "Settings of your account",
         href: "/parametres-de-compte"
     }
 ];
@@ -88,14 +82,23 @@ const settings: Settings[] = [
                     </a>
                 </div>
         ) : null}
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {settings.map((setting) => (
-                <a href={setting.href} class="block p-6 border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all" aria-label={`${setting.title}: ${setting.description}`}>
-                    <h2 class="text-xl font-semibold text-gray-900 mb-2">{setting.title}</h2>
-                    <div class="mt-4 text-blue-600 text-sm font-medium">View</div>
-                </a>
-            ))}
+        <div class="max-w-2xl mx-auto">
+            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                {settings.map((setting, index) => (
+                        <a
+                                href={setting.href}
+                                class={`block p-4 hover:bg-gray-50 transition-colors ${index !== settings.length - 1 ? 'border-b border-gray-200' : ''}`}
+                        >
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <h2 class="text-base font-medium text-gray-900">{setting.title}</h2>
+                                    <p class="text-gray-500 text-sm mt-0.5">{setting.description}</p>
+                                </div>
+                                <span class="text-gray-400 ml-4">›</span>
+                            </div>
+                        </a>
+                ))}
+            </div>
         </div>
     </main>
     </body>
