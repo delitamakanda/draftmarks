@@ -143,10 +143,18 @@ if (isAuthenticated) {
 
     { isAuthenticated && (
         <>
-            <script type="application/json" id="initial-data">{JSON.stringify(initial)}</script>
+            <script type="application/json" id="initial-data">{JSON.stringify(initial).replace(/</g, '\\u003c')}</script>
             <script type="module">
                 const initialDataEl = document.getElementById('initial-data');
-                const initialData = initialDataEl?.textContent ? JSON.parse(initialDataEl.textContent) : { items: [], totalCount: 0, page: 1, pageSize: 24 };
+                let initialData = { items: [], totalCount: 0, page: 1, pageSize: 24 };
+                const initialPayload = initialDataEl?.textContent?.trim();
+                if (initialPayload) {
+                    try {
+                        initialData = JSON.parse(initialPayload);
+                    } catch (parseErr) {
+                        console.error('Failed to parse initial data payload', parseErr);
+                    }
+                }
 
                 const controls = document.getElementById('controls');
                 const grid = document.getElementById('grid');
