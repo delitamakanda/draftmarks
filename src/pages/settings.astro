@@ -18,6 +18,51 @@ if (sessionId) {
     }
 }
 
+interface Settings {
+    id: string;
+    title: string;
+    description: string;
+    keywords: string[];
+    href: string;
+}
+
+const settings: Settings[] = [
+    {
+        id: "legal-page",
+        title: "Legal",
+        description: "Mentions légales de notre site",
+        keywords: ["mentions légales", "politique de confidentialité", "cookies"],
+        href: "/mentions-legales"
+    },
+    {
+        id: "privacy-policy-page",
+        title: "Privacy Policy",
+        description: "Politique de confidentialité de notre site",
+        keywords: ["politique de confidentialité", "cookies", "protection des données personnelles"],
+        href: "/politique-de-confidentialite"
+    },
+    {
+        id: "terms-of-service-page",
+        title: "Terms of Service",
+        description: "Conditions d'utilisation de notre site",
+        keywords: ["conditions d'utilisation", "cookies", "droit d'accès et de rectification"],
+        href: "/conditions-d-utilisation"
+    },
+    {
+        id: "contact-page",
+        title: "Contact us",
+        description: "Contactez-nous pour toute question ou demande",
+        keywords: ["contact", "formulaire de contact", "répondre à un message"],
+        href: "/contact"
+    },
+    {
+        id: "accounts-page",
+        title: "Settings",
+        description: "Paramètres de votre compte",
+        keywords: ["compte", "réinitialiser le mot de passe", "changer d'adresse email"],
+        href: "/parametres-de-compte"
+    }
+];
 ---
 <html lang="fr">
     <head>
@@ -33,18 +78,25 @@ if (sessionId) {
             <h1 class="text-2xl font-bold">DraftMarks</h1>
             <a href="/" class="text-sm underline">Home</a>
         </header>
-        <ul class="flex items-center gap-4">
         {!isAuthenticated? (
-            <li>
-               page 1
-                </li>
-        ):(
-            <li>page 2</li>
-        )}
-        </ul>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+                    <p class="text-blue-900 mb-4">
+                        You must be logged in to access your account settings.
+                    </p>
+                    <a href="/api/oauth/google" class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Sign in with Google
+                    </a>
+                </div>
+        ):null}
 
-    <Button>Tailwind Button in Astro!</Button>
-    <a href="/markdown-page" class="p-4 underline">Markdown is also supported...</a>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {settings.map((setting) => (
+                <a href={setting.href} class="block p-6 border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-2">{setting.title}</h2>
+                    <div class="mt-4 text-blue-600 text-sm font-medium">Accéder</div>
+                </a>
+            ))}
+        </div>
     </main>
     </body>
 </html>
