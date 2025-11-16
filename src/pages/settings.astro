@@ -1,6 +1,23 @@
 ---
 import '../styles/global.css';
 import Button from "../components/Button.astro";
+import { getSessionCookie} from "../lib/oauth.ts";
+import { db } from '../lib/db.ts';
+export const prerender = false;
+const req = Astro.request;
+const headers = req.headers;
+
+// verify session cookie
+const sessionId = getSessionCookie(headers);
+let isAuthenticated = false;
+
+if (sessionId) {
+    const token = await db.getToken(sessionId);
+    if (token && token.expiresAt && Number(token.expiresAt) > Date.now()) {
+        isAuthenticated = true;
+    }
+}
+
 ---
 <html lang="fr">
     <head>
@@ -10,10 +27,24 @@ import Button from "../components/Button.astro";
         <meta name="generator" content={Astro.generator} />
         <title>Astro + TailwindCSS</title>
     </head>
-    <body>
-    <div class="grid place-items-center h-screen content-center">
+    <body class="bg-white text-gray-900">
+    <main class="max-w-7xl mx-auto p-4">
+        <header class="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <h1 class="text-2xl font-bold">DraftMarks</h1>
+            <a href="/" class="text-sm underline">Home</a>
+        </header>
+        <ul class="flex items-center gap-4">
+        {!isAuthenticated? (
+            <li>
+               page 1
+                </li>
+        ):(
+            <li>page 2</li>
+        )}
+        </ul>
+
     <Button>Tailwind Button in Astro!</Button>
     <a href="/markdown-page" class="p-4 underline">Markdown is also supported...</a>
-    </div>
+    </main>
     </body>
 </html>
