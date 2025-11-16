@@ -166,7 +166,7 @@ export const db = {
         const { data, error } = await supabase
             .from('oauth_tokens')
             .select('*')
-            .eq('sessionId', sessionId).single();
+            .eq('session_id', sessionId).single();
         if (error || !data) {
             return  null
         }

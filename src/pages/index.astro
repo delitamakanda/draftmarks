@@ -1,11 +1,27 @@
 ---
 import '../styles/global.css';
 // Component Imports
-import Button from '../components/Button.astro';
-import ReactCounter from '../components/ReactCounter';
+// import Button from '../components/Button.astro';
+// import ReactCounter from '../components/ReactCounter';
 import BookmarkCard from '../components/BookmarkCard.astro';
+import { getSessionCookie} from "../lib/oauth.ts";
+import { db } from '../lib/db.ts';
 import SearchBar from '../components/SearchBar';
 import TagChips from '../components/TagChips';
+export const prerender = false;
+const req = Astro.request;
+const headers = req.headers;
+
+// verify session cookie
+const sessionId = getSessionCookie(headers);
+let isAuthenticated = false;
+
+if (sessionId) {
+  const token = await db.getToken(sessionId);
+  if (token && token.expiresAt && Number(token.expiresAt) > Date.now()) {
+    isAuthenticated = true;
+  }
+}
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/basics/astro-components/
@@ -18,21 +34,30 @@ const order = url.searchParams.get('order') || 'desc';
 const page = Number(url.searchParams.get('page') || 1);
 const pageSize = Number(url.searchParams.get('pageSize') || 24);
 
+let initial = { items: [], total: 0, page, pageSize };
+let allTags: string[] = [];
+let allDomains: string[] = [];
 
 // Server-side initial data
-const apiUrl = new URL('/api/gmail/links', Astro.url.origin);
-apiUrl.searchParams.set('page', String(page));
-apiUrl.searchParams.set('pageSize', String(pageSize));
-if (q) apiUrl.searchParams.set('q', q);
-if (tag) apiUrl.searchParams.set('tag', tag);
-if (domain) apiUrl.searchParams.set('domain', domain);
-apiUrl.searchParams.set('sort', sort);
-apiUrl.searchParams.set('order', order);
+if (isAuthenticated) {
+    const origin = new URL(Astro.request.url).origin;
+    const apiUrl = new URL('/api/gmail/links', origin);
 
+    apiUrl.searchParams.set('page', String(page));
+    apiUrl.searchParams.set('pageSize', String(pageSize));
+    if (q) apiUrl.searchParams.set('q', q);
+    if (tag) apiUrl.searchParams.set('tag', tag);
+    if (domain) apiUrl.searchParams.set('domain', domain);
+    apiUrl.searchParams.set('sort', sort);
+    apiUrl.searchParams.set('order', order);
 
-// const initial = await fetch(apiUrl).then(r=>r.json());
-//const allTags: string[] = Array.from(new Set(initial.items.flatMap((i:any)=>i.tags||[]))).sort();
-//const allDomains: string[] = Array.from(new Set(initial.items.map((i:any)=>i.domain))).sort();
+    const response = await fetch(apiUrl);
+    if (response.ok) {
+        initial = await response.json();
+        allTags = Array.from(new Set(initial.items.flatMap((i:any)=>i.tags||[]))).sort();
+        allDomains = Array.from(new Set(initial.items.map((i:any)=>i.domain))).sort();
+    }
+}
 ---
 
 <html lang="en">
@@ -44,23 +69,78 @@ apiUrl.searchParams.set('order', order);
 		<title>Astro + TailwindCSS</title>
 	</head>
 
-    <body class="bg-gray-50 min-h-screen">
-    <main class="max-w-6xl mx-auto p-4">
-        <header class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-bold">Mes Bookmarks Gmail</h1>
-            <a href="/api/oauth/google" class="text-blue-600 underline">Connecter Google</a>
+    <body class="bg-white text-gray-900">
+    <main class="max-w-7xl mx-auto p-4">
+        <header class="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <h1 class="text-2xl font-bold">DraftMarks</h1>
+            <a href="/settings" class="text-sm underline">Settings</a>
         </header>
 
+        { !isAuthenticated && (
+                <section class="rounded-2xl border p-6 text-center">
+                    <h2 class="text-lg font-semibold mb-2">Connect your Gmail account</h2>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Sign in with Google to fetch your Gmail drafts and turn them into a visual bookmark library.
+                    </p>
+                    <a
+                            href="/api/oauth/google"
+                            class="inline-flex items-center justify-center px-4 py-2 rounded-xl border font-medium"
+                    >
+                        Connect with Google
+                    </a>
+                </section>
+        )}
 
-        <div class="flex gap-4 mb-4">
-            <SearchBar />
-            <TagChips />
-        </div>
+        { isAuthenticated && (
+                <>
+                    <!-- Search & controls -->
+                    <section class="rounded-2xl border p-3 mb-4">
+                        <form id="controls" class="flex flex-wrap items-center gap-2">
+                            <input name="q" value={q} placeholder="Search title / url / tag…" class="w-full sm:w-80 px-3 py-2 rounded-xl border outline-none focus:ring" />
+                            <select name="tag" class="px-3 py-2 rounded-xl border">
+                                <option value="">All tags</option>
+                                {allTags.map(t => <option selected={tag===t} value={t}>#{t}</option>)}
+                            </select>
+                            <input name="domain" value={domain} placeholder="Domain (e.g. github.com)" class="px-3 py-2 rounded-xl border outline-none focus:ring" />
+                            <select name="sort" class="px-3 py-2 rounded-xl border">
+                                <option value="added_at" selected={sort==='added_at'}>Newest</option>
+                                <option value="last_seen_at" selected={sort==='last_seen_at'}>Last seen</option>
+                                <option value="domain" selected={sort==='domain'}>Domain</option>
+                                <option value="title" selected={sort==='title'}>Title</option>
+                            </select>
+                            <select name="order" class="px-3 py-2 rounded-xl border">
+                                <option value="desc" selected={order==='desc'}>Desc</option>
+                                <option value="asc" selected={order==='asc'}>Asc</option>
+                            </select>
+                            <button type="button" id="resync" class="ml-auto px-3 py-2 rounded-xl border">Resync</button>
+                        </form>
+                    </section>
 
+                    <!-- Stats -->
+                    <section id="stats" class="mb-4 text-sm text-gray-600">
+                        <span id="stat-count">{initial.total}</span> links · Page <span id="stat-page">{initial.page}</span>
+                    </section>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <!-- Grid -->
+                    <section id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {initial.items.map((item:any) => (
+                                <BookmarkCard item={item} />
+                        ))}
+                    </section>
 
-        </div>
+                    <!-- Pagination -->
+                    <nav class="flex items-center justify-center gap-2 mt-6">
+                        <button id="prev" class="px-3 py-2 rounded-xl border" disabled={page<=1}>Prev</button>
+                        <button id="next" class="px-3 py-2 rounded-xl border" disabled={initial.items.length < pageSize}>Next</button>
+                    </nav>
+                </>
+        )}
     </main>
+
+    { isAuthenticated && (
+        <script type="module">
+            {/* ton script de search / pagination / resync existant ici */}
+            </script>
+    )}
     </body>
 </html>
