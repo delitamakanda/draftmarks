@@ -6,8 +6,6 @@ import '../styles/global.css';
 import BookmarkCard from '../components/BookmarkCard.astro';
 import { getSessionCookie} from "../lib/oauth.ts";
 import { db } from '../lib/db.ts';
-import SearchBar from '../components/SearchBar';
-import TagChips from '../components/TagChips';
 export const prerender = false;
 const req = Astro.request;
 const headers = req.headers;
