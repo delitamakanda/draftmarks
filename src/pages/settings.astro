@@ -78,7 +78,7 @@ const settings: Settings[] = [
             <h1 class="text-2xl font-bold">DraftMarks</h1>
             <a href="/" class="text-sm underline">Home</a>
         </header>
-        {!isAuthenticated? (
+        {!isAuthenticated ? (
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
                     <p class="text-blue-900 mb-4">
                         You must be logged in to access your account settings.
@@ -87,13 +87,13 @@ const settings: Settings[] = [
                         Sign in with Google
                     </a>
                 </div>
-        ):null}
+        ) : null}
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {settings.map((setting) => (
-                <a href={setting.href} class="block p-6 border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all">
+                <a href={setting.href} class="block p-6 border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all" aria-label={`${setting.title}: ${setting.description}`}>
                     <h2 class="text-xl font-semibold text-gray-900 mb-2">{setting.title}</h2>
-                    <div class="mt-4 text-blue-600 text-sm font-medium">Accéder</div>
+                    <div class="mt-4 text-blue-600 text-sm font-medium">View</div>
                 </a>
             ))}
         </div>
