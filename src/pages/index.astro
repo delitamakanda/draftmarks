@@ -143,11 +143,13 @@ if (isAuthenticated) {
 
     { isAuthenticated && (
         <>
-            <script type="application/json" id="initial-data">{JSON.stringify(initial).replace(/</g, '\\u003c')}</script>
             <script type="module">
-                const initialDataEl = document.getElementById('initial-data');
+                const initialPayload = `{JSON.stringify(initial)
+                    .replace(/\\/g, "\\\\")
+                    .replace(/`/g, "\\`")
+                    .replace(/</g, "\\u003c")}`;
+
                 let initialData = { items: [], totalCount: 0, page: 1, pageSize: 24 };
-                const initialPayload = initialDataEl?.textContent?.trim();
                 if (initialPayload) {
                     try {
                         initialData = JSON.parse(initialPayload);
