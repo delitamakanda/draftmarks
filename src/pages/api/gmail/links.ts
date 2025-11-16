@@ -48,11 +48,8 @@ export const GET: APIRoute = async ({ request }) => {
                     ogImageUrl: '',
                     faviconUrl: '',
                     tags: tags,
-                    source: {
-                        gmailDraftId: det.id,
-                        gmailMessageId: det.message.id,
-                        createdAt: det.message.internalDate ? new Date(Number(det.message.internalDate)).toISOString() : undefined,
-                    },
+                    gmailDraftId: det.id,
+                    gmailMessageId: det.message.id,
                     addedAt: new Date().toISOString(),
                     lastSeenAt: new Date().toISOString(),
                     status: 'fresh',

@@ -34,7 +34,7 @@ const order = url.searchParams.get('order') || 'desc';
 const page = Number(url.searchParams.get('page') || 1);
 const pageSize = Number(url.searchParams.get('pageSize') || 24);
 
-let initial = { items: [], total: 0, page, pageSize };
+let initial = { items: [], totalCount: 0, page, pageSize };
 let allTags: string[] = [];
 let allDomains: string[] = [];
 
@@ -51,9 +51,14 @@ if (isAuthenticated) {
     apiUrl.searchParams.set('sort', sort);
     apiUrl.searchParams.set('order', order);
 
-    const response = await fetch(apiUrl);
+    const response = await fetch(apiUrl, {
+        headers: {
+            cookie: Astro.request.headers.get('cookie') ?? '',
+        },
+    });
     if (response.ok) {
         initial = await response.json();
+        console.log('Fetched data:', initial);
         allTags = Array.from(new Set(initial.items.flatMap((i:any)=>i.tags||[]))).sort();
         allDomains = Array.from(new Set(initial.items.map((i:any)=>i.domain))).sort();
     }
@@ -118,13 +123,15 @@ if (isAuthenticated) {
 
                     <!-- Stats -->
                     <section id="stats" class="mb-4 text-sm text-gray-600">
-                        <span id="stat-count">{initial.total}</span> links · Page <span id="stat-page">{initial.page}</span>
+                        <span id="stat-count">{initial.totalCount}</span> links · Page <span id="stat-page">{initial.page}</span>
                     </section>
 
                     <!-- Grid -->
                     <section id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {initial.items.map((item:any) => (
-                                <BookmarkCard item={item} />
+                                <BookmarkCard url={item.url}
+                                title={item.title} domain={item.domain} tags={item.tags} description={item.description} faviconUrl={item.faviconUrl} ogImageUrl={item.ogImageUrl}
+                                />
                         ))}
                     </section>
 

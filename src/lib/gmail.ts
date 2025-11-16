@@ -45,7 +45,7 @@ function authHeader(accessToken: string): HeadersInit {
 
 export async function gmailListDrafts(accessToken: string, pageToken?: string): Promise<GmailDraftsResponse> {
     const url = new URL(`${GMAIL_API_BASE_URL}/drafts`);
-    url.searchParams.set('pageToken', String(pageToken) || '');
+    url.searchParams.set('maxResults', '100');  // Limit to 100 drafts per page for efficiency.
     if (pageToken) {
         url.searchParams.set('pageToken', pageToken);
     }

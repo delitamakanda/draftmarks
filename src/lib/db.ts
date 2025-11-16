@@ -9,7 +9,8 @@ export type Bookmark = {
     ogImageUrl?: string;
     faviconUrl?: string;
     tags: string[];
-    source: { gmailDraftId: string; gmailMessageId?: string; createdAt?: string; };
+    gmailDraftId?: string;
+    gmailMessageId?: string;
     status: 'fresh' | 'stale' | 'archived';
     addedAt: string;
     lastSeenAt: string;
@@ -37,9 +38,10 @@ export const db = {
                     og_image_url: bookmark.ogImageUrl,
                     favicon_url: bookmark.faviconUrl,
                     tags: bookmark.tags,
-                    source: bookmark.source,
+                    gmail_draft_id: bookmark.gmailDraftId,
+                    gmail_message_id: bookmark.gmailMessageId,
                     status: bookmark.status,
-                    addedAt: bookmark.addedAt,
+                    added_at: bookmark.addedAt,
                     last_seen_at: bookmark.lastSeenAt,
                     user_id: bookmark.userId ?? 'me',
                 }).select()
@@ -101,11 +103,8 @@ export const db = {
              ogImageUrl: item.og_image_url,
              faviconUrl: item.favicon_url,
              tags: item.tags,
-             source: {
-                 gmailDraftId: item.source.gmail_draft_id,
-                 gmailMessageId: item.source.gmail_message_id,
-                 createdAt: item.source.created_at,
-             },
+             gmailDraftId: item.gmail_draft_id,
+             gmailMessageId: item.gmail_message_id,
              status: item.status,
              addedAt: item.added_at,
              lastSeenAt: item.last_seen_at,
@@ -133,11 +132,8 @@ export const db = {
             ogImageUrl: data.og_image_url,
             faviconUrl: data.favicon_url,
             tags: data.tags,
-            source: {
-                gmailDraftId: data.source.gmail_draft_id,
-                gmailMessageId: data.source.gmail_message_id,
-                createdAt: data.source.created_at,
-            },
+            gmailDraftId: data.gmail_draft_id,
+            gmailMessageId: data.gmail_message_id,
             status: data.status,
             addedAt: data.added_at,
             lastSeenAt: data.last_seen_at,

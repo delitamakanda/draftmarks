@@ -1,5 +1,15 @@
 ---
-const { url, title, description, faviconUrl, ogImageUrl, tags, domain } = Astro.props;
+interface Props {
+    url: string;
+    title?: string;
+    description?: string;
+    faviconUrl?: string;
+    ogImageUrl?: string;
+    tags?: string[];
+    domain?: string;
+}
+
+const { url, title, description, faviconUrl, ogImageUrl, tags, domain } = Astro.props as Props;
 ---
 
 <article class="bg-white rounded-2xl shadow p-3 flex flex-col hover:shadow-md transition">
