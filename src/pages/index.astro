@@ -309,9 +309,26 @@ if (isAuthenticated) {
                     fetchData();
                 });
 
-                resyncBtn.addEventListener('click', () => {
-                    state.page = 1;
-                    fetchData();
+                resyncBtn.addEventListener('click', async () => {
+                    toggleLoading(true);
+                    resyncBtn.textContent = 'Syncing…';
+                    try {
+                        const response = await fetch('/api/gmail/sync', {
+                            method: 'POST',
+                            credentials: 'same-origin'
+                        });
+                        if (!response.ok) {
+                            throw new Error('Sync failed');
+                        }
+                        const result = await response.json();
+                        console.log('Sync completed:', result);
+                        state.page = 1;
+                        await fetchData();
+                    } catch (err) {
+                        console.error('Sync error:', err);
+                        alert('Failed to sync Gmail drafts. Please try again.');
+                        toggleLoading(false);
+                    }
                 });
             </script>
         </>
